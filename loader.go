@@ -1,4 +1,4 @@
-package dtrain
+package whitewalker
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"path"
+	"log"
 )
 
 const (
@@ -14,56 +15,56 @@ const (
 	partialsDir = "partials"
 
 )
-
-type FilenameHolder struct {
-	Filename string
-	Key      string
-}
+var ( EmptyLayoutHolder = LayoutHolder{})
 
 type LayoutHolder struct {
-	Content  string
-	Key      string
+	Path   string
+	Layout *interface{}
+	Key    string
 }
 
-type mapHolder map[string]LayoutHolder
 type TemplateContainer struct {
-	M        mapHolder
-	Partials map[string]FilenameHolder
-	Defaults map[string]FilenameHolder
+	M        map[string]*LayoutHolder
+	Partials map[string]string
+	Defaults map[string]string
 }
 
-func ( t TemplateContainer)  Get(name string) LayoutHolder {
+func ( t TemplateContainer)  Set(name string, layout interface{})  {
+	get, _ := t.Get(name)
+	get.Layout = &layout
+}
+
+func ( t TemplateContainer)  Get(name string) ( *LayoutHolder, bool ) {
 	if r, b :=t.M[name] ; b {
-		return r
+		return r, true
 	}
 
 	baseName := path.Base(name)
 
 	if mm, b := t.Defaults[baseName] ; b && baseName != baseOf {
-		t.M[name] = LayoutHolder{
-			Content:mm.Filename,
-			Key:name,
+		t.M[name] = &LayoutHolder{
+			Key:  name,
+			Path: mm,
 		}
-		return t.M[name]
+		return t.M[name],true
 	}
 
-	return LayoutHolder{}
+	return nil, false
 }
 
 func Load(rootDir string) *TemplateContainer {
-	partials := make(map[string]FilenameHolder)
-	defaults := make(map[string]FilenameHolder)
+	partials := make(map[string]string)
+	defaults := make(map[string]string)
 
 	containers := &TemplateContainer{
 		Partials: partials,
 		Defaults: defaults,
-		M:        make(map[string]LayoutHolder),
+		M:        make(map[string]*LayoutHolder),
 	}
 
 	filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
-		//TODO 중간에 멈춰야 하나? 안 멈추는 게 좋을듯
 		if nil != err {
-			return err
+			log.Printf("err before %v, %v",path, err)
 		}
 
 		// 디렉토리는 패스
@@ -81,23 +82,23 @@ func Load(rootDir string) *TemplateContainer {
 		switch contentName {
 		case "":
 			return fmt.Errorf("file name is empty %v, %v", path, info)
+		case partialsDir:
+			partials[layoutName] = path
+			break
 		case defaultDir:
-			defaults[layoutName] = FilenameHolder{Filename: filename, Key: layoutName}
+			defaults[layoutName] = path
 			if baseOf != layoutName {
-				containers.M[layoutName] = LayoutHolder{
+				containers.M[layoutName] = &LayoutHolder{
 					//Partials: partials,
-					Key:     layoutName,
-					Content: contentName,
+					Key:  layoutName,
+					Path: path,
 				}
 			}
 			break
-		case partialsDir:
-			partials[layoutName] = FilenameHolder{Filename: filename, Key: layoutName}
-			break
 		default:
-			containers.M[contentName+"/"+layoutName] = LayoutHolder{
-				Key:     layoutName,
-				Content: contentName,
+			containers.M[contentName+"/"+layoutName] = &LayoutHolder{
+				Key:  layoutName,
+				Path: path,
 			}
 			break
 		}
