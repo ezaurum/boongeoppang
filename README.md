@@ -1,5 +1,6 @@
-template-train
-특정 컨벤션에 따라 템플릿 파일 로드
+# White Walker
+
+컨벤션에 따라 템플릿 파일 로드할 수 있도록 경로 준비
 
 ```
 _default/
@@ -9,7 +10,7 @@ _default/
     test.tmpl
     
 partials/
-    각 파일은 모두 기본 로드    
+    모든 파일 기본 로드
 
 content/
     single.tmpl -  "content", single 을 로드할 때 로드
@@ -18,5 +19,3 @@ user/
     
 ```
 
-
-    
