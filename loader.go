@@ -28,6 +28,7 @@ type TemplateContainer struct {
 	M        map[string]*LayoutHolder
 	Partials map[string]string
 	Defaults map[string]string
+	Populate func(files...string) interface{}
 }
 
 func ( t TemplateContainer)  Set(name string, layout interface{})  {
@@ -54,15 +55,26 @@ func ( t TemplateContainer)  Get(name string) ( *LayoutHolder, bool ) {
 	return nil, false
 }
 
-func Load(rootDir string) *TemplateContainer {
+func Default() *TemplateContainer {
 	partials := make(map[string]string)
 	defaults := make(map[string]string)
-
-	containers := &TemplateContainer{
+	return &TemplateContainer{
 		Partials: partials,
 		Defaults: defaults,
 		M:        make(map[string]*LayoutHolder),
+		Populate: populateHtmlTemplate,
 	}
+}
+
+func DefaultLoad() * TemplateContainer {
+	return Default().Load("templates")
+}
+
+func Load(rootDir string) *TemplateContainer {
+	return Default().Load(rootDir)
+}
+
+func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
 
 	filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if nil != err {
@@ -86,14 +98,14 @@ func Load(rootDir string) *TemplateContainer {
 		case "":
 			return fmt.Errorf("file name is empty %v, %v", path, info)
 		case partialsDir:
-			partials[layoutName] = path
+			t.Partials[layoutName] = path
 			break
 		case defaultDir:
-			defaults[layoutName] = path
+			t.Defaults[layoutName] = path
 			templateKey = layoutName
 			fallthrough
 		default:
-			containers.M[templateKey] = &LayoutHolder{
+			t.M[templateKey] = &LayoutHolder{
 				Name: layoutName,
 				Path: path,
 			}
@@ -103,15 +115,20 @@ func Load(rootDir string) *TemplateContainer {
 		return err
 	})
 
+	t.initiateTemplates()
+
+	return t
+}
+
+// initiate html/template
+func (t *TemplateContainer) initiateTemplates() {
 	var partialsFileNames []string
-	for _, v := range partials {
+	for _, v := range t.Partials {
 		partialsFileNames = append(partialsFileNames, v)
 	}
-
 	// _default/baseof 먼제 체크
-	base, isBase := defaults["baseof"]
-
-	for key, value := range containers.M {
+	base, isBase := t.Defaults["baseof"]
+	for key, value := range t.M {
 		layoutName := value.Name
 
 		// 목록의 제일 처음이 기본 템플릿이 된다.
@@ -124,7 +141,7 @@ func Load(rootDir string) *TemplateContainer {
 
 		// 2. _default/layout
 		if layoutName != key {
-			ln, e := defaults[layoutName]
+			ln, e := t.Defaults[layoutName]
 			if e && len(ln) > 0 {
 				files = append(files, ln)
 			}
@@ -140,12 +157,9 @@ func Load(rootDir string) *TemplateContainer {
 			files = append(files[:1], partialsFileNames...)
 		}
 
-		fmt.Println(files)
-
-		must := template.Must(template.ParseFiles(files...))
-
-		value.Layout = must
+		value.Layout = t.Populate(files...)
 	}
-
-	return containers
+}
+func populateHtmlTemplate(files...string) interface{} {
+	return template.Must(template.ParseFiles(files...))
 }
