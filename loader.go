@@ -1,4 +1,4 @@
-package whitewalker
+package boongeoppang
 
 import (
 	"fmt"
@@ -7,20 +7,21 @@ import (
 	"strings"
 	"path"
 	"log"
+	"html/template"
 )
 
 const (
 	baseOf = "baseof"
 	defaultDir = "_default"
-	partialsDir = "partials"
+	partialsDir = "_partials"
 
 )
 var ( EmptyLayoutHolder = LayoutHolder{})
 
 type LayoutHolder struct {
 	Path   string
-	Layout *interface{}
-	Key    string
+	Layout interface{}
+	Name   string
 }
 
 type TemplateContainer struct {
@@ -43,11 +44,12 @@ func ( t TemplateContainer)  Get(name string) ( *LayoutHolder, bool ) {
 
 	if mm, b := t.Defaults[baseName] ; b && baseName != baseOf {
 		t.M[name] = &LayoutHolder{
-			Key:  name,
+			Name: name,
 			Path: mm,
 		}
 		return t.M[name],true
 	}
+
 
 	return nil, false
 }
@@ -79,6 +81,7 @@ func Load(rootDir string) *TemplateContainer {
 		}
 
 		contentName := filepath.Base(filepath.Dir(path))
+		templateKey := contentName + "/" + layoutName
 		switch contentName {
 		case "":
 			return fmt.Errorf("file name is empty %v, %v", path, info)
@@ -87,17 +90,11 @@ func Load(rootDir string) *TemplateContainer {
 			break
 		case defaultDir:
 			defaults[layoutName] = path
-			if baseOf != layoutName {
-				containers.M[layoutName] = &LayoutHolder{
-					//Partials: partials,
-					Key:  layoutName,
-					Path: path,
-				}
-			}
-			break
+			templateKey = layoutName
+			fallthrough
 		default:
-			containers.M[contentName+"/"+layoutName] = &LayoutHolder{
-				Key:  layoutName,
+			containers.M[templateKey] = &LayoutHolder{
+				Name: layoutName,
 				Path: path,
 			}
 			break
@@ -105,6 +102,50 @@ func Load(rootDir string) *TemplateContainer {
 
 		return err
 	})
+
+	var partialsFileNames []string
+	for _, v := range partials {
+		partialsFileNames = append(partialsFileNames, v)
+	}
+
+	// _default/baseof 먼제 체크
+	base, isBase := defaults["baseof"]
+
+	for key, value := range containers.M {
+		layoutName := value.Name
+
+		// 목록의 제일 처음이 기본 템플릿이 된다.
+		var files []string
+
+		// 1. baseof
+		if isBase {
+			files = append(files, base)
+		}
+
+		// 2. _default/layout
+		if layoutName != key {
+			ln, e := defaults[layoutName]
+			if e && len(ln) > 0 {
+				files = append(files, ln)
+			}
+		}
+
+		// 3. domain/layout - path
+		files = append(files, value.Path)
+
+		// partials added after first object
+		if len(files) > 1 {
+			files = append(files[:1], append(partialsFileNames, files[1:]...)...)
+		} else {
+			files = append(files[:1], partialsFileNames...)
+		}
+
+		fmt.Println(files)
+
+		must := template.Must(template.ParseFiles(files...))
+
+		value.Layout = must
+	}
 
 	return containers
 }

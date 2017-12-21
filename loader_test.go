@@ -1,4 +1,4 @@
-package whitewalker
+package boongeoppang
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -12,7 +12,7 @@ func TestBaseLayoutLoad(t *testing.T) {
 	rootDir := "tests/full"
 	container := Load(rootDir)
 
-	notExist := []string{"test","head","foot", "baseof"}
+	notExist := []string{"test","head","foot"}
 	for _,el := range notExist {
 		layout, exist := container.Get(el)
 		assert.False(t, exist)
@@ -77,5 +77,5 @@ func TestLayoutSetGet(t *testing.T) {
 	layout, b := container.Get("index")
 
 	assert.True(t, b)
-	assert.Equal(t, expected, (*layout.Layout).(string))
+	assert.Equal(t, expected, layout.Layout)
 }
