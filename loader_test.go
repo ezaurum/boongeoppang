@@ -77,3 +77,10 @@ func TestLayoutSetGet(t *testing.T) {
 	assert.True(t, b)
 	assert.Equal(t, expected, layout.Layout)
 }
+
+func TestLoadDebug(t *testing.T) {
+
+	container := LoadDebug("tests/full")
+
+	assert.True(t, container.IsDebug())
+}

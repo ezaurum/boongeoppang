@@ -32,6 +32,7 @@ type TemplateContainer struct {
 	Partials map[string]string
 	Defaults map[string]string
 	Populate func(files ...string) interface{}
+	debug    bool
 }
 
 func (t TemplateContainer) Set(name string, layout interface{}) {
@@ -66,6 +67,12 @@ func Default() *TemplateContainer {
 		M:        make(map[string]*LayoutHolder),
 		Populate: populateHtmlTemplate,
 	}
+}
+
+func LoadDebug(rootDir string) *TemplateContainer {
+	d := Default()
+	d.debug = true
+	return d.Load(rootDir)
 }
 
 func DefaultLoad() *TemplateContainer {
@@ -162,6 +169,10 @@ func (t *TemplateContainer) initiateTemplates() {
 		value.Layout = t.Populate(files...)
 	}
 }
+
 func populateHtmlTemplate(files ...string) interface{} {
 	return template.Must(template.ParseFiles(files...))
+}
+func (t *TemplateContainer) IsDebug() bool {
+	return t.debug
 }
