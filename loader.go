@@ -33,7 +33,7 @@ type TemplateContainer struct {
 
 func ( t TemplateContainer)  Set(name string, layout interface{})  {
 	get, _ := t.Get(name)
-	get.Layout = &layout
+	get.Layout = layout
 }
 
 func ( t TemplateContainer)  Get(name string) ( *LayoutHolder, bool ) {
