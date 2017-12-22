@@ -1,4 +1,4 @@
-[English](README.en.md)
+[한국어](README.ko.md)
 # 붕어빵
 
 관습에 따라 템플릿 파일을 불러오고, `string`으로 된 키를 이용해서 템플릿에 접근할 수있도록 해 준다.

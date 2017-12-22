@@ -14,7 +14,7 @@ const (
 	baseOf = "baseof"
 	defaultDir = "_default"
 	partialsDir = "_partials"
-
+	DefaultTemplateDir = "templates"
 )
 var ( EmptyLayoutHolder = LayoutHolder{})
 
@@ -67,7 +67,7 @@ func Default() *TemplateContainer {
 }
 
 func DefaultLoad() * TemplateContainer {
-	return Default().Load("templates")
+	return Default().Load(DefaultTemplateDir)
 }
 
 func Load(rootDir string) *TemplateContainer {
