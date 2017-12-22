@@ -2,9 +2,9 @@ package boongeoppang
 
 import (
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"strings"
 	"path/filepath"
+	"strings"
+	"testing"
 )
 
 func TestBaseLayoutLoad(t *testing.T) {
@@ -12,15 +12,15 @@ func TestBaseLayoutLoad(t *testing.T) {
 	rootDir := "tests/full"
 	container := Load(rootDir)
 
-	notExist := []string{"test","head","foot"}
-	for _,el := range notExist {
+	notExist := []string{"test", "head", "foot"}
+	for _, el := range notExist {
 		layout, exist := container.Get(el)
 		assert.False(t, exist)
 		assert.Nil(t, layout)
 	}
 
-	defaultsExpected := []string{"index","single","list", "form", "baseof"}
-	for _,el := range defaultsExpected {
+	defaultsExpected := []string{"index", "single", "list", "form", "baseof"}
+	for _, el := range defaultsExpected {
 		path := container.Defaults[el]
 
 		if el != "baseof" {
@@ -36,8 +36,8 @@ func TestBaseLayoutLoad(t *testing.T) {
 		assert.True(t, strings.Index(path, "tests") > -1)
 	}
 
-	partialsExpected := []string{"head","body"}
-	for _,el := range partialsExpected {
+	partialsExpected := []string{"head", "body"}
+	for _, el := range partialsExpected {
 		path := container.Partials[el]
 		assert.NotEmpty(t, path)
 		assert.True(t, strings.Index(path, el) > -1)
@@ -50,8 +50,8 @@ func TestContentSpecifiedLayoutLoad(t *testing.T) {
 
 	container := Load("tests/full")
 
-	defaultsExpected := []string{"product/index","product/single","product/list", "product/form" }
-	for _,el := range defaultsExpected {
+	defaultsExpected := []string{"product/index", "product/single", "product/list", "product/form"}
+	for _, el := range defaultsExpected {
 
 		layout, exist := container.Get(el)
 		assert.True(t, exist)
@@ -64,8 +64,6 @@ func TestContentSpecifiedLayoutLoad(t *testing.T) {
 		assert.True(t, strings.Index(path, ".tmpl") > -1)
 		assert.True(t, strings.Index(path, "tests") > -1)
 	}
-
-
 }
 
 func TestLayoutSetGet(t *testing.T) {

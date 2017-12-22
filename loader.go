@@ -2,21 +2,24 @@ package boongeoppang
 
 import (
 	"fmt"
+	"html/template"
+	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
-	"path"
-	"log"
-	"html/template"
 )
 
 const (
-	baseOf = "baseof"
-	defaultDir = "_default"
-	partialsDir = "_partials"
+	baseOf             = "baseof"
+	defaultDir         = "_default"
+	partialsDir        = "_partials"
 	DefaultTemplateDir = "templates"
 )
-var ( EmptyLayoutHolder = LayoutHolder{})
+
+var (
+	EmptyLayoutHolder = LayoutHolder{}
+)
 
 type LayoutHolder struct {
 	Path   string
@@ -28,29 +31,28 @@ type TemplateContainer struct {
 	M        map[string]*LayoutHolder
 	Partials map[string]string
 	Defaults map[string]string
-	Populate func(files...string) interface{}
+	Populate func(files ...string) interface{}
 }
 
-func ( t TemplateContainer)  Set(name string, layout interface{})  {
+func (t TemplateContainer) Set(name string, layout interface{}) {
 	get, _ := t.Get(name)
 	get.Layout = layout
 }
 
-func ( t TemplateContainer)  Get(name string) ( *LayoutHolder, bool ) {
-	if r, b :=t.M[name] ; b {
+func (t TemplateContainer) Get(name string) (*LayoutHolder, bool) {
+	if r, b := t.M[name]; b {
 		return r, true
 	}
 
 	baseName := path.Base(name)
 
-	if mm, b := t.Defaults[baseName] ; b && baseName != baseOf {
+	if mm, b := t.Defaults[baseName]; b && baseName != baseOf {
 		t.M[name] = &LayoutHolder{
 			Name: name,
 			Path: mm,
 		}
-		return t.M[name],true
+		return t.M[name], true
 	}
-
 
 	return nil, false
 }
@@ -66,7 +68,7 @@ func Default() *TemplateContainer {
 	}
 }
 
-func DefaultLoad() * TemplateContainer {
+func DefaultLoad() *TemplateContainer {
 	return Default().Load(DefaultTemplateDir)
 }
 
@@ -78,7 +80,7 @@ func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
 
 	filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if nil != err {
-			log.Printf("err before %v, %v",path, err)
+			log.Printf("err before %v, %v", path, err)
 		}
 
 		// 디렉토리는 패스
@@ -160,6 +162,6 @@ func (t *TemplateContainer) initiateTemplates() {
 		value.Layout = t.Populate(files...)
 	}
 }
-func populateHtmlTemplate(files...string) interface{} {
+func populateHtmlTemplate(files ...string) interface{} {
 	return template.Must(template.ParseFiles(files...))
 }
