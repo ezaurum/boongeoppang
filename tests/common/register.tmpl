@@ -1,0 +1,14 @@
+{{define "contents"}}
+<main>
+    {{if .Error}}
+        <p> {{ .Error }}</p>
+    {{end}}
+    <form method="post" class="pure-form pure-form-stacked">
+        <label for="user-id">사용자ID</label><input id="user-id" type="text" name="accountName">
+        <label for="user-password">비밀번호</label><input id="user-password" type="text" name="accountPassword">
+        <label for="user-remember">자동로그인</label><input id="user-remember" type="checkbox" name="rememberLogin" value="checked">
+        <input type="submit" value="회원가입">
+    </form>
+</main>
+{{ end }}
+{{define "title"}}로그인{{end}}

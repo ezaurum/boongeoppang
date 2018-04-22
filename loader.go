@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"github.com/fsnotify/fsnotify"
 )
 
 const (
@@ -15,6 +16,7 @@ const (
 	defaultDir         = "_default"
 	partialsDir        = "_partials"
 	DefaultTemplateDir = "templates"
+	DefaultTemplateExt = ".tmpl"
 )
 
 var (
@@ -23,19 +25,20 @@ var (
 
 type LayoutHolder struct {
 	Path   string
-	Layout interface{}
+	Layout *template.Template
 	Name   string
 }
 
 type TemplateContainer struct {
-	M        map[string]*LayoutHolder
-	Partials map[string]string
-	Defaults map[string]string
-	Populate func(files ...string) interface{}
-	debug    bool
+	M           map[string]*LayoutHolder
+	Partials    map[string]string
+	Defaults    map[string]string
+	FuncMap     template.FuncMap
+	debug       bool
+	TemplateDir string
 }
 
-func (t TemplateContainer) Set(name string, layout interface{}) {
+func (t TemplateContainer) Set(name string, layout *template.Template) {
 	get, _ := t.Get(name)
 	get.Layout = layout
 }
@@ -49,8 +52,9 @@ func (t TemplateContainer) Get(name string) (*LayoutHolder, bool) {
 
 	if mm, b := t.Defaults[baseName]; b && baseName != baseOf {
 		t.M[name] = &LayoutHolder{
-			Name: name,
-			Path: mm,
+			Name:   name,
+			Path:   mm,
+			Layout: t.M[baseName].Layout,
 		}
 		return t.M[name], true
 	}
@@ -65,25 +69,59 @@ func Default() *TemplateContainer {
 		Partials: partials,
 		Defaults: defaults,
 		M:        make(map[string]*LayoutHolder),
-		Populate: populateHtmlTemplate,
+		FuncMap: template.FuncMap{
+			"asDate":          asDate,
+			"asDate12HMinute": asDate12HMinute,
+			"asDate24HMinute": asDate24HMinute,
+			"asTime12H":       asTime12H,
+			"asTime24H":       asTime24H,
+		},
 	}
 }
 
-func LoadDebug(rootDir string) *TemplateContainer {
-	d := Default()
-	d.debug = true
-	return d.Load(rootDir)
+func LoadDefaultDebug() (*TemplateContainer, chan *TemplateContainer) {
+	return LoadDebug(DefaultTemplateDir)
 }
 
-func DefaultLoad() *TemplateContainer {
-	return Default().Load(DefaultTemplateDir)
+func LoadDefault() *TemplateContainer {
+	return Load(DefaultTemplateDir)
 }
 
 func Load(rootDir string) *TemplateContainer {
 	return Default().Load(rootDir)
 }
 
+func LoadDebug(rootDir string) (*TemplateContainer, chan *TemplateContainer) {
+	container := Default()
+	container.debug = true
+	load := container.Load(rootDir)
+	c := load.Watch()
+	return load, c
+}
+
+func (t *TemplateContainer) Watch() chan *TemplateContainer {
+	c := make(chan *TemplateContainer)
+	WatchDir(t.TemplateDir, func(watcher *fsnotify.Watcher) {
+		for {
+			select {
+			case ev := <-watcher.Events:
+				if ev.Op&fsnotify.Create == fsnotify.Create &&
+					DefaultTemplateExt == filepath.Ext(ev.Name) {
+					tc := Load(t.TemplateDir)
+					tc.debug = t.debug
+					c <- tc
+				}
+			case err := <-watcher.Errors:
+				log.Fatal("error:", err)
+			}
+		}
+	})
+	return c
+}
+
 func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
+
+	t.TemplateDir = rootDir
 
 	filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if nil != err {
@@ -96,7 +134,14 @@ func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
 		}
 
 		filename := info.Name()
-		layoutName := strings.TrimSuffix(filename, filepath.Ext(filename))
+		ext := filepath.Ext(filename)
+
+		// 템플릿이 아니면 패스
+		if ext != DefaultTemplateExt {
+			return nil
+		}
+
+		layoutName := strings.TrimSuffix(filename, ext)
 		if layoutName == "" {
 			return fmt.Errorf("file name is empty %v, %v", path, info)
 		}
@@ -112,6 +157,7 @@ func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
 		case defaultDir:
 			t.Defaults[layoutName] = path
 			templateKey = layoutName
+
 			fallthrough
 		default:
 			t.M[templateKey] = &LayoutHolder{
@@ -119,6 +165,10 @@ func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
 				Path: path,
 			}
 			break
+		}
+
+		if t.debug {
+			log.Printf("key:%v, name:%v, path:%v", templateKey, layoutName, path)
 		}
 
 		return err
@@ -131,6 +181,7 @@ func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
 
 // initiate html/template
 func (t *TemplateContainer) initiateTemplates() {
+
 	var partialsFileNames []string
 	for _, v := range t.Partials {
 		partialsFileNames = append(partialsFileNames, v)
@@ -166,13 +217,11 @@ func (t *TemplateContainer) initiateTemplates() {
 			files = append(files[:1], partialsFileNames...)
 		}
 
-		value.Layout = t.Populate(files...)
+		// baseof.tmpl이 실행되어야 한다.
+		// parse를 하면 각 파일 이름별로 하나씩 내부에 템플릿이 만들어진다
+		value.Layout =
+			template.Must(template.
+				New(path.Base(files[0])).
+				Funcs(t.FuncMap).ParseFiles(files...))
 	}
-}
-
-func populateHtmlTemplate(files ...string) interface{} {
-	return template.Must(template.ParseFiles(files...))
-}
-func (t *TemplateContainer) IsDebug() bool {
-	return t.debug
 }

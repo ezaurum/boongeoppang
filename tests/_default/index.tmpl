@@ -1,0 +1,23 @@
+{{define "contents"}}
+<main>
+{{if .Error}}
+    <p> {{ .Error }}</p>
+{{end}}
+
+    <h1>Dashboard</h1>
+
+{{if .TestDate }}
+    <p>{{.TestDate | asDate }}</p>
+{{end}}
+
+    <ul>
+    {{ range .UserList }}
+        <li>
+            <span>{{.ID }}</span>
+            <span>{{.UserName }}</span>
+            <span>{{.RoleType }}</span>
+        </li>
+    {{ end }}
+    </ul>
+</main>
+{{ end }}
