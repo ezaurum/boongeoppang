@@ -19,9 +19,11 @@ func NewDebug(templateDir string, engine *gin.Engine) {
 		templateContainer: b,
 	}
 	go func() {
-		tc := <-c
-		engine.HTMLRender = Render{
-			templateContainer: tc,
+		for {
+			tc := <-c
+			engine.HTMLRender = Render{
+				templateContainer: tc,
+			}
 		}
 	}()
 }
