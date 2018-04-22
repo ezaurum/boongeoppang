@@ -1,9 +1,9 @@
 package render
 
 import (
-	"github.com/ezaurum/cthulthu/render/boongeoppang"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
+	"github.com/ezaurum/boongeoppang"
 )
 
 //check implementation
