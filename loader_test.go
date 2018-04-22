@@ -25,7 +25,7 @@ func TestBaseLayoutLoad(t *testing.T) {
 		assert.Nil(t, layout)
 	}
 
-	defaultsExpected := []string{"index", "single", "list", "form", "baseof"}
+	defaultsExpected := []string{"index", "single", "list",  "baseof"}
 	for _, el := range defaultsExpected {
 		path := container.Defaults[el]
 
