@@ -92,7 +92,7 @@ func LoadDebug(rootDir string, funcMap template.FuncMap) (*TemplateContainer, ch
 	container.debug = true
 	container.SetFuncMap(funcMap)
 	load := container.Load(rootDir)
-	c := load.Watch()
+	c := load.Watch(funcMap)
 	return load, c
 }
 
@@ -105,7 +105,7 @@ func (t *TemplateContainer) SetFuncMap(funcMap template.FuncMap) *TemplateContai
 	return t
 }
 
-func (t *TemplateContainer) Watch() chan *TemplateContainer {
+func (t *TemplateContainer) Watch(funcMap template.FuncMap) chan *TemplateContainer {
 	c := make(chan *TemplateContainer)
 	WatchDir(t.TemplateDir, func(watcher *fsnotify.Watcher) {
 		for {
@@ -113,7 +113,7 @@ func (t *TemplateContainer) Watch() chan *TemplateContainer {
 			case ev := <-watcher.Events:
 				if ev.Op&fsnotify.Create == fsnotify.Create &&
 					DefaultTemplateExt == filepath.Ext(ev.Name) {
-					tc := Load(t.TemplateDir, nil)
+					tc := Load(t.TemplateDir, funcMap)
 					tc.debug = t.debug
 					c <- tc
 				}
