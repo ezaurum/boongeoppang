@@ -48,6 +48,6 @@ func TestLogin(t *testing.T) {
 
 func getDefault() *gin.Engine {
 	r := gin.New()
-	r.HTMLRender = New("../tests")
+	r.HTMLRender = New("../tests", nil)
 	return r
 }

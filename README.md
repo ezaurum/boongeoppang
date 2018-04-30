@@ -1,3 +1,4 @@
+[한국어](README.md)
 [English](README.en.md)
 # 붕어빵
 
@@ -6,23 +7,21 @@
 ## 사용법
 
 ``` 
-	container := boongeoppang.Load("tests/full")
+container := boongeoppang.Load("tests/full")
 ```
 
 ## 디렉토리 구조
 템를릿 디렉토리 안에 `_default`,`_partials`가 있으면 기본 레이아웃과 
 
 `user/profile` 에 대해 템플릿 파일 찾는 순서
-``` 
-/_default/baseof
-/_default/profile
-/user/profile
-```
+1. `/_default/baseof`
+1. `/_default/profile`
+1. `/user/profile`
+
 없는 파일은 불러오지 않는다.
 
-```
-_default/ - 전체 레이아웃이 들어가 있는 디렉토리
-    baseof.tmpl - 기본 전체 레이아웃 틀. 없으면 로드 안함
+`_default/` - 전체 레이아웃이 들어가 있는 디렉토리
+    `baseof.tmpl` - 기본 전체 레이아웃 틀. 없으면 로드 안함
     
     single.tmpl - single layout 형태 기본 
     test.tmpl
@@ -35,5 +34,3 @@ content/
 user/
     test.tmpl
     
-```
-

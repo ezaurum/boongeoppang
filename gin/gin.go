@@ -4,17 +4,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
 	"github.com/ezaurum/boongeoppang"
+	"html/template"
 )
 
 //check implementation
 var _ render.HTMLRender = Render{}
 
 func Default() (Render) {
-	return New(boongeoppang.DefaultTemplateDir)
+	return New(boongeoppang.DefaultTemplateDir, nil)
 }
 
-func NewDebug(templateDir string, engine *gin.Engine) {
-	b, c := boongeoppang.LoadDebug(templateDir)
+func NewDebug(templateDir string, funcMap template.FuncMap, engine *gin.Engine) {
+	b, c := boongeoppang.LoadDebug(templateDir, funcMap)
 	engine.HTMLRender = Render{
 		templateContainer: b,
 	}
@@ -29,9 +30,9 @@ func NewDebug(templateDir string, engine *gin.Engine) {
 }
 
 // New instance
-func New(templateDir string) Render {
+func New(templateDir string, funcMap template.FuncMap) Render {
 	return Render{
-		templateContainer: boongeoppang.Load(templateDir),
+		templateContainer: boongeoppang.Load(templateDir, funcMap),
 	}
 }
 

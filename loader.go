@@ -19,10 +19,6 @@ const (
 	DefaultTemplateExt = ".tmpl"
 )
 
-var (
-	EmptyLayoutHolder = LayoutHolder{}
-)
-
 type LayoutHolder struct {
 	Path   string
 	Layout *template.Template
@@ -80,23 +76,33 @@ func Default() *TemplateContainer {
 }
 
 func LoadDefaultDebug() (*TemplateContainer, chan *TemplateContainer) {
-	return LoadDebug(DefaultTemplateDir)
+	return LoadDebug(DefaultTemplateDir, nil)
 }
 
 func LoadDefault() *TemplateContainer {
-	return Load(DefaultTemplateDir)
+	return Load(DefaultTemplateDir, nil)
 }
 
-func Load(rootDir string) *TemplateContainer {
-	return Default().Load(rootDir)
+func Load(rootDir string, funcMap template.FuncMap) *TemplateContainer {
+	return Default().SetFuncMap(funcMap).Load(rootDir)
 }
 
-func LoadDebug(rootDir string) (*TemplateContainer, chan *TemplateContainer) {
+func LoadDebug(rootDir string, funcMap template.FuncMap) (*TemplateContainer, chan *TemplateContainer) {
 	container := Default()
 	container.debug = true
+	container.SetFuncMap(funcMap)
 	load := container.Load(rootDir)
 	c := load.Watch()
 	return load, c
+}
+
+func (t *TemplateContainer) SetFuncMap(funcMap template.FuncMap) *TemplateContainer {
+	if len(funcMap) > 0 {
+		for k, v := range funcMap {
+			t.FuncMap[k] = v
+		}
+	}
+	return t
 }
 
 func (t *TemplateContainer) Watch() chan *TemplateContainer {
@@ -107,7 +113,7 @@ func (t *TemplateContainer) Watch() chan *TemplateContainer {
 			case ev := <-watcher.Events:
 				if ev.Op&fsnotify.Create == fsnotify.Create &&
 					DefaultTemplateExt == filepath.Ext(ev.Name) {
-					tc := Load(t.TemplateDir)
+					tc := Load(t.TemplateDir, nil)
 					tc.debug = t.debug
 					c <- tc
 				}

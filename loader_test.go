@@ -16,7 +16,7 @@ const testTemplateDir = "tests"
 
 func TestBaseLayoutLoad(t *testing.T) {
 
-	container := Load(testTemplateDir)
+	container := Load(testTemplateDir, nil)
 
 	notExist := []string{"test", "head", "foot"}
 	for _, el := range notExist {
@@ -54,9 +54,9 @@ func TestBaseLayoutLoad(t *testing.T) {
 
 func TestContentSpecifiedLayoutLoad(t *testing.T) {
 
-	container := Load(testTemplateDir)
+	container := Load(testTemplateDir, nil)
 
-	defaultsExpected := []string{"product/index", "product/single", "product/list", "product/form"}
+	defaultsExpected := []string{ "product/test", "product/list", }
 	for _, el := range defaultsExpected {
 
 		layout, exist := container.Get(el)
@@ -76,7 +76,7 @@ func TestContentSpecifiedLayoutLoad(t *testing.T) {
 
 func TestLayoutSetGet(t *testing.T) {
 
-	container := Load(testTemplateDir)
+	container := Load(testTemplateDir, nil)
 	expected := template.New("Test")
 	container.Set("index", expected)
 
@@ -88,7 +88,7 @@ func TestLayoutSetGet(t *testing.T) {
 
 func TestExecute(t *testing.T) {
 
-	container := Load(testTemplateDir)
+	container := Load(testTemplateDir, nil)
 	expected := "common/login"
 	holder, b := container.Get(expected)
 	if !b {
@@ -105,7 +105,7 @@ func TestExecute(t *testing.T) {
 
 func TestExecuteFuncMap(t *testing.T) {
 
-	container := Load(testTemplateDir)
+	container := Load(testTemplateDir, nil)
 	expected := "index"
 	holder, b := container.Get(expected)
 	if !b {
