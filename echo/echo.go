@@ -40,5 +40,5 @@ func (t *Template) Render(w io.Writer, name string,
 	if !isExist {
 		panic("not exist template " + name)
 	}
-	return layout.Layout.ExecuteTemplate(w, name, data)
+	return layout.Layout.ExecuteTemplate(w, "baseof.tmpl", data)
 }
