@@ -71,6 +71,7 @@ func Default() *TemplateContainer {
 			"asDate24HMinute": asDate24HMinute,
 			"asTime12H":       asTime12H,
 			"asTime24H":       asTime24H,
+			"stringInSlice":   stringInSlice,
 		},
 	}
 }
