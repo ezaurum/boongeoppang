@@ -112,8 +112,7 @@ func (t *TemplateContainer) Watch(funcMap template.FuncMap) chan *TemplateContai
 		for {
 			select {
 			case ev := <-watcher.Events:
-				if ev.Op&fsnotify.Create == fsnotify.Create &&
-					DefaultTemplateExt == filepath.Ext(ev.Name) {
+				if DefaultTemplateExt == filepath.Ext(ev.Name) {
 					tc := Load(t.TemplateDir, funcMap)
 					tc.debug = t.debug
 					c <- tc
