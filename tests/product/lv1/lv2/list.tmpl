@@ -1,0 +1,17 @@
+{{define "contents"}}
+<main>
+    {{if .Error}}
+        <p> {{ .Error }}</p>
+    {{end}}
+
+        <ul>
+        {{ range .UserList }}
+        <li>
+            <span>{{.ID }}</span>
+            <span>{{.UserName }}</span>
+            <span>{{.RoleType }}</span>
+        </li>
+        {{ end }}
+        </ul>
+</main>
+{{ end }}

@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"bytes"
 	"time"
+	"fmt"
 )
 
 const testTemplateDir = "tests"
@@ -25,10 +26,11 @@ func TestBaseLayoutLoad(t *testing.T) {
 		assert.Nil(t, layout)
 	}
 
-	defaultsExpected := []string{"index", "single", "list",  "baseof"}
+	defaultsExpected := []string{"index", "single", "list", "baseof"}
 	for _, el := range defaultsExpected {
 		path := container.Defaults[el]
 
+		fmt.Println(el)
 		if el != "baseof" {
 			layout, exist := container.Get(el)
 			assert.True(t, exist)
@@ -50,13 +52,24 @@ func TestBaseLayoutLoad(t *testing.T) {
 		assert.True(t, strings.Index(path, ".tmpl") > -1)
 		assert.True(t, strings.Index(path, testTemplateDir) > -1)
 	}
+
+	expected := []string{"layouts/test1/product/lv1/lv2/form"}
+	for _, el := range expected {
+		ll := container.M[el]
+		assert.NotEmpty(t, ll.Name)
+		assert.NotEmpty(t, ll.Path)
+	}
+
+	for k, v := range container.M {
+		fmt.Printf("%v : %v\n", k, v.Path)
+	}
 }
 
 func TestContentSpecifiedLayoutLoad(t *testing.T) {
 
 	container := Load(testTemplateDir, nil)
 
-	defaultsExpected := []string{ "product/test", "product/list", }
+	defaultsExpected := []string{"product/test", "product/list",}
 	for _, el := range defaultsExpected {
 
 		layout, exist := container.Get(el)
@@ -121,5 +134,5 @@ func TestExecuteFuncMap(t *testing.T) {
 	assert.Nil(t, err, err)
 	s := buf.String()
 	assert.True(t, len(s) > 0)
-	assert.True(t, strings.Contains(s,targetTime.Format("2006-01-02")))
+	assert.True(t, strings.Contains(s, targetTime.Format("2006-01-02")))
 }

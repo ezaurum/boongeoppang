@@ -1,14 +1,14 @@
 package boongeoppang
 
 import (
-	"fmt"
 	"html/template"
 	"log"
-	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"github.com/fsnotify/fsnotify"
+	"strings"
+	"fmt"
+	"os"
 )
 
 const (
@@ -124,19 +124,17 @@ func (t *TemplateContainer) Watch(funcMap template.FuncMap) chan *TemplateContai
 	})
 	return c
 }
+func walkInner(t *TemplateContainer) filepath.WalkFunc {
 
-func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
-
-	t.TemplateDir = rootDir
-
-	filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+	return func(pathString string, info os.FileInfo, err error) error {
 		if nil != err {
-			log.Printf("err before %v, %v", path, err)
+			log.Printf("err before %v, %v", pathString, err)
+			return err
 		}
 
 		// 디렉토리는 패스
-		if info.IsDir() {
-			return nil
+		if info.IsDir() && path.Base(pathString) != info.Name() {
+			filepath.Walk(path.Join(pathString, info.Name()), walkInner(t))
 		}
 
 		filename := info.Name()
@@ -149,36 +147,76 @@ func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
 
 		layoutName := strings.TrimSuffix(filename, ext)
 		if layoutName == "" {
-			return fmt.Errorf("file name is empty %v, %v", path, info)
+			return fmt.Errorf("file name is empty %v, %v", pathString, info)
 		}
 
-		contentName := filepath.Base(filepath.Dir(path))
+		contentName := AfterSecond(filepath.Dir(pathString))
 		templateKey := contentName + "/" + layoutName
 		switch contentName {
 		case "":
-			return fmt.Errorf("file name is empty %v, %v", path, info)
+			return fmt.Errorf("file name is empty %v, %v", pathString, info)
 		case partialsDir:
-			t.Partials[layoutName] = path
+			t.Partials[layoutName] = pathString
 			break
 		case defaultDir:
-			t.Defaults[layoutName] = path
+			t.Defaults[layoutName] = pathString
 			templateKey = layoutName
 
 			fallthrough
 		default:
 			t.M[templateKey] = &LayoutHolder{
 				Name: layoutName,
-				Path: path,
+				Path: pathString,
 			}
 			break
 		}
 
 		if t.debug {
-			log.Printf("key:%v, name:%v, path:%v", templateKey, layoutName, path)
+			log.Printf("key:%v, name:%v, pathString:%v", templateKey, layoutName, pathString)
 		}
 
 		return err
-	})
+	}
+}
+
+// Base returns the last element of path.
+// Trailing path separators are removed before extracting the last element.
+// If the path is empty, Base returns ".".
+// If the path consists entirely of separators, Base returns a single separator.
+func AfterSecond(pathString string) string {
+	if pathString == "" {
+		return "."
+	}
+	// Strip trailing slashes.
+	for len(pathString) > 0 && os.IsPathSeparator(pathString[len(pathString)-1]) {
+		pathString = pathString[0 : len(pathString)-1]
+	}
+	// Throw away volume name
+	pathString = pathString[len(filepath.VolumeName(pathString)):]
+	// Find the last element
+	i := len(pathString)
+	if i < 1 {
+		return string(filepath.Separator)
+	}
+	l := 1
+	for l < i && !os.IsPathSeparator(pathString[l]) {
+		l++
+	}
+	if l < i {
+		pathString = pathString[l+1:]
+	}
+	// If empty now, it had only slashes.
+	if pathString == "" {
+		return string(filepath.Separator)
+	}
+	return pathString
+}
+
+func (t *TemplateContainer) Load(rootDir string) *TemplateContainer {
+
+	t.TemplateDir = rootDir
+
+	filepath.Walk(rootDir, walkInner(t))
 
 	t.initiateTemplates()
 
