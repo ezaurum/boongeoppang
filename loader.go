@@ -15,6 +15,7 @@ const (
 	baseOf             = "baseof"
 	defaultDir         = "_default"
 	partialsDir        = "_partials"
+	themesDir          = "_themes"
 	DefaultTemplateDir = "templates"
 	DefaultTemplateExt = ".tmpl"
 )
@@ -28,6 +29,7 @@ type LayoutHolder struct {
 type TemplateContainer struct {
 	M           map[string]*LayoutHolder
 	Partials    map[string]string
+	Themes      map[string]string
 	Defaults    map[string]string
 	FuncMap     template.FuncMap
 	debug       bool
@@ -155,13 +157,13 @@ func walkInner(t *TemplateContainer) filepath.WalkFunc {
 		switch contentName {
 		case "":
 			return fmt.Errorf("file name is empty %v, %v", pathString, info)
+		case themesDir:
+			t.Themes[templateKey] = pathString
 		case partialsDir:
 			t.Partials[layoutName] = pathString
-			break
 		case defaultDir:
 			t.Defaults[layoutName] = pathString
 			templateKey = layoutName
-
 			fallthrough
 		default:
 			t.M[templateKey] = &LayoutHolder{
