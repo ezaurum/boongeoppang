@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/ezaurum/boongeoppang"
 	"html/template"
+	"path"
 )
 
 var _ echo.Renderer = &Template{}
@@ -36,9 +37,13 @@ func New(templateDir string, funcMap template.FuncMap) *Template {
 
 func (t *Template) Render(w io.Writer, name string,
 	data interface{}, c echo.Context) error {
+	layoutName := path.Base(name)
 	layout, isExist := t.templateContainer.Get(name)
 	if !isExist {
-		panic("not exist template " + name)
+		layout, isExist = t.templateContainer.Get(path.Join("common", layoutName))
+	}
+	if !isExist {
+		layout, isExist = t.templateContainer.Get(path.Join("_default", layoutName))
 	}
 	return layout.Layout.ExecuteTemplate(w, "baseof.tmpl", data)
 }
