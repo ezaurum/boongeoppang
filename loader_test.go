@@ -1,16 +1,16 @@
 package boongeoppang
 
 import (
+	"bytes"
+	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"html/template"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"html/template"
-	"os"
-	"github.com/gin-gonic/gin"
-	"bytes"
 	"time"
-	"fmt"
 )
 
 const testTemplateDir = "tests"
@@ -69,7 +69,7 @@ func TestContentSpecifiedLayoutLoad(t *testing.T) {
 
 	container := Load(testTemplateDir, nil)
 
-	defaultsExpected := []string{"product/test", "product/list",}
+	defaultsExpected := []string{"product/test", "product/list"}
 	for _, el := range defaultsExpected {
 
 		layout, exist := container.Get(el)

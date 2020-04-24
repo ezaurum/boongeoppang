@@ -1,16 +1,16 @@
 package render
 
 import (
+	"github.com/ezaurum/boongeoppang"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
-	"github.com/ezaurum/boongeoppang"
 	"html/template"
 )
 
 //check implementation
 var _ render.HTMLRender = Render{}
 
-func Default() (Render) {
+func Default() Render {
 	return New(boongeoppang.DefaultTemplateDir, nil)
 }
 

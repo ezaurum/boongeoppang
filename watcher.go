@@ -3,8 +3,8 @@ package boongeoppang
 import (
 	"github.com/fsnotify/fsnotify"
 	"log"
-	"path/filepath"
 	"os"
+	"path/filepath"
 )
 
 func WatchDir(targetDir string, run func(watcher *fsnotify.Watcher)) *fsnotify.Watcher {
@@ -28,4 +28,3 @@ func WatchDir(targetDir string, run func(watcher *fsnotify.Watcher)) *fsnotify.W
 
 	return watcher
 }
-

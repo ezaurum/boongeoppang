@@ -2,7 +2,7 @@ package echo
 
 import (
 	"github.com/ezaurum/boongeoppang"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"html/template"
 	"io"
 	"path"

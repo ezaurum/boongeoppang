@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"testing"
 
+	"fmt"
 	"github.com/ezaurum/cthulthu/test"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"fmt"
 )
 
 func TestIndex(t *testing.T) {
